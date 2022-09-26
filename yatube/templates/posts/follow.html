@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load cache %}
+{% block title %}
+  Последние обновления ваших любимых авторов
+{% endblock title %}
+{% block content %}  
+  <h1>Последние обновления ваших любимых авторов</h1>
+    {% cache 0 index_page %}
+      {% include 'posts/includes/switcher.html' %}
+      {% for post in page_obj %}
+        {% include 'posts/includes/post.html' %}
+        {% if not forloop.last %}
+        <hr>
+        {% endif %}
+      {% endfor %}
+    {% endcache %}
+    {% include 'posts/includes/paginator.html' %}
+{% endblock content %}
