@@ -59,6 +59,12 @@ class ViewURLTest(TestCase):
         )
 
     def test_folow_index_context(self):
+        """Проверка что посты автора не появляются у тех,
+            кто на него не подписан"""
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertIsNone(
+            response.context.get('post')
+        )
         """Проверка что посты автора появляются у тех,
             кто на него подписан"""
         self.authorized_client.force_login(self.follower)
@@ -70,12 +76,6 @@ class ViewURLTest(TestCase):
         self.assertNotIn(
             response.context.get('post'),
             Post.objects.filter(author=self.user)
-        )
-        """Проверка что посты автора не появляются у тех,
-            кто на него не подписан"""
-        reponse = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertIsNone(
-            reponse.context.get('post')
         )
 
     def test_post_detail_filter(self):
