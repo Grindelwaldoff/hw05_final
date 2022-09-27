@@ -93,7 +93,7 @@ class FormsTest(TestCase):
         )
 
     def test_form_Comment(self):
-        Comment_count = Comment.objects.count()
+        Comment.objects.all().delete()
         form_data = {
             'text': 'Тестовый коммент'
         }
@@ -102,9 +102,18 @@ class FormsTest(TestCase):
             data=form_data,
             follow=True,
         )
-        self.assertEqual(
-            response.context['comment'].count(),
-            Comment_count + 1
+        first_and_last_object = Comment.objects.get(id=1)
+        object_list = [
+            (first_and_last_object.author, self.user),
+            (first_and_last_object.post, self.post),
+        ]
+        self._test_context_on_page(object_list)
+        self.assertRedirects(
+            response,
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post.id}
+            )
         )
 
     def test_form_post_edit(self):

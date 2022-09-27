@@ -4,6 +4,7 @@ from itertools import islice
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse
 
 from posts.models import User, Group, Post, Follow
@@ -45,6 +46,7 @@ class ViewURLTest(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_group_list_right_context(self):
         response = self.authorized_client.get(
@@ -56,6 +58,24 @@ class ViewURLTest(TestCase):
         self.assertNotIn(
             Post.objects.get(id=self.post.id),
             response.context.get('page_obj')
+        )
+
+    def test_cache(self):
+        post = Post.objects.create(
+            author=self.user,
+            group=self.group,
+            text='Тест кеша'
+        )
+        response = self.authorized_client.get(reverse('posts:index')).content
+        post.delete()
+        self.assertEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
+        )
+        cache.clear()
+        self.assertNotEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
         )
 
     def test_folow_index_context(self):
@@ -77,6 +97,26 @@ class ViewURLTest(TestCase):
             response.context.get('post'),
             Post.objects.filter(author=self.user)
         )
+
+    def test_follow_possibility(self):
+        check_list = [
+            (reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.following.username}
+            ), True),
+            (reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': self.following.username}
+            ), False),
+        ]
+        for tuple in check_list:
+            reverse_name, status = tuple
+            with self.subTest(reverse_name=reverse_name):
+                response = self.authorized_client.get(
+                    reverse_name,
+                    follow=True
+                )
+                self.assertEqual(response.context['following'], status)
 
     def test_post_detail_filter(self):
         """Проверка вывода правлиьного поста в подробной информации"""
@@ -165,6 +205,7 @@ class PaginatorViewsTest(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 

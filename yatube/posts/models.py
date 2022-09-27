@@ -46,6 +46,18 @@ class Follow(models.Model):
         verbose_name='Автор'
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_follow'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='check_user'
+            )
+        ]
+
 
 class Post(CreateModel):
     FIRST_FIFTEEN_SIMBOLS = 15
