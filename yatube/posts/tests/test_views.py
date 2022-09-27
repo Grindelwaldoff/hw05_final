@@ -116,7 +116,7 @@ class ViewURLTest(TestCase):
                     reverse_name,
                     follow=True
                 )
-                self.assertEqual(response.context['following'], status)
+                self.assertEqual(response.context.get('following'), status)
 
     def test_post_detail_filter(self):
         """Проверка вывода правлиьного поста в подробной информации"""
