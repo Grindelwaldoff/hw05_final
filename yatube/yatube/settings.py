@@ -155,6 +155,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
+
 # Constants
 
 POSTS_AMOUNT = 10

@@ -102,10 +102,12 @@ class FormsTest(TestCase):
             data=form_data,
             follow=True,
         )
-        first_and_last_object = Comment.objects.get(id=1)
+        self.assertEqual(Comment.objects.all().count(), 1)
+        first_and_last_object = Comment.objects.all().first()
         object_list = [
             (first_and_last_object.author, self.user),
             (first_and_last_object.post, self.post),
+            (first_and_last_object.text, form_data['text'])
         ]
         self._test_context_on_page(object_list)
         self.assertRedirects(
