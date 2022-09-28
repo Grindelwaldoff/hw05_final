@@ -49,7 +49,7 @@ def post_detail(request, post_id):
         Post.objects.select_related('author', 'group'),
         id=post_id
     )
-    comments = Comment.objects.filter()
+    comments = Comment.objects.filter(post_id__comments__post=post_id)
     context = {
         'post': post,
         'form': CommentForm(),
