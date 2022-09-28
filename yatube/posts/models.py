@@ -113,8 +113,6 @@ class Comment(CreateModel):
     post = models.ForeignKey(
         Post,
         related_name='comments',
-        blank=False,
-        null=False,
         verbose_name='Пост к которому отнсится комментарий',
         on_delete=models.CASCADE
     )

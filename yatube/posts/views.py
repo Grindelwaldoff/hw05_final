@@ -2,7 +2,6 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.views.decorators.cache import cache_page
 
 from posts.models import Follow, Comment, Post, Group, User
 from posts.forms import PostForm, GroupForm, CommentForm
@@ -16,7 +15,6 @@ def paginator_function(
     return paginator.get_page(page_number)
 
 
-@cache_page(20, key_prefix='/')
 def index(request):
     posts = Post.objects.select_related('author', 'group')
     page_number = request.GET.get('page')
