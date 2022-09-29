@@ -68,7 +68,7 @@ class Post(CreateModel):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='posts_author',
+        related_name='posts',
         verbose_name='Имя пользователя',
         help_text='Выберите пользователя'
     )
@@ -77,7 +77,7 @@ class Post(CreateModel):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='posts_group',
+        related_name='posts',
         verbose_name='Название группы',
         help_text='Выберите группу'
     )
@@ -108,7 +108,7 @@ class Comment(CreateModel):
         null=True,
         on_delete=models.CASCADE,
         verbose_name='Автор комментария',
-        related_name='comments_author'
+        related_name='comments'
     )
     post = models.ForeignKey(
         Post,

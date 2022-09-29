@@ -2,7 +2,7 @@
 {% block title %}Профайл пользователя {{ author.username }}{% endblock title %}
 {% block content %}  
   <h1>Все посты пользователя {{ author.username }} </h1>
-  <h3>Всего постов: {{ author.posts_author.count }} </h3>
+  <h3>Всего постов: {{ author.posts.count }} </h3>
   {% if author != request.user  %}
     <div class="mb-5">
       {% if following %}

@@ -24,23 +24,23 @@ class ViewURLTest(TestCase):
             title='Leo',
             slug='leo',
         )
-        Follow.objects.create(
-            user=cls.user,
-            author=cls.follower
-        )
         cls.not_related_group = Group.objects.create(
             title='Leonid',
             slug='leonid',
+        )
+        cls.post = Post.objects.create(
+            text='Тестовый пост',
+            author=cls.user,
+            group=cls.group,
         )
         cls.post_follower = Post.objects.create(
             text='Тестовый пост подписчика',
             author=cls.follower,
             group=cls.group,
         )
-        cls.post = Post.objects.create(
-            text='Тестовый пост',
-            author=cls.user,
-            group=cls.group,
+        Follow.objects.create(
+            user=cls.user,
+            author=cls.follower
         )
 
     def setUp(self):
@@ -60,19 +60,6 @@ class ViewURLTest(TestCase):
             Post.objects.filter(id=self.post.id),
         )
 
-    def test_cache(self):
-        response = self.authorized_client.get(reverse('posts:index')).content
-        self.post.delete()
-        self.assertEqual(
-            response,
-            self.authorized_client.get(reverse('posts:index')).content
-        )
-        cache.clear()
-        self.assertNotEqual(
-            response,
-            self.authorized_client.get(reverse('posts:index')).content
-        )
-
     def test_folow_index_context(self):
         """Проверка что посты автора не появляются у тех,
             кто на него не подписан"""
@@ -84,59 +71,66 @@ class ViewURLTest(TestCase):
         """Проверка что посты автора появляются у тех,
             кто на него подписан"""
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        print(response.context.get('page_obj').object_list)
-        self.assertIn(response.context['page_obj'], self.post_follower)
-        # self.assertNotIn(
-        #     response.context.get('page_obj').object_list[0], self.post
-        # )
+        self.assertIn(self.post_follower, response.context['page_obj'])
+        self.assertNotIn(
+            self.post,
+            response.context['page_obj']
+        )
 
-    # def test_follow_possibility(self):
-    #     check_list = [
-    #         (reverse(
-    #             'posts:profile_follow',
-    #             kwargs={'username': self.user.username}
-    #         ), True),
-    #         (reverse(
-    #             'posts:profile_unfollow',
-    #             kwargs={'username': self.user.username}
-    #         ), False),
-    #     ]
-    #     for tuple in check_list:
-    #         reverse_name, status = tuple
-    #         with self.subTest(reverse_name=reverse_name):
-    #             response = self.authorized_client.get(
-    #                 reverse_name,
-    #                 follow=True
-    #             )
-    #             self.assertEqual(response.context.get('following'), status
+    def test_follow_possibility(self):
+        response = self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': self.follower.username}
+        ), follow=True)
+        self.assertEqual(response.context['following'], True)
 
-    # def test_post_detail_filter(self):
-    #     """Проверка вывода правлиьного поста в подробной информации"""
-    #     response = self.authorized_client.get(
-    #         reverse('posts:post_detail', kwargs={'post_id': self.post.id})
-    #     )
-    #     context_post = response.context.get('post')
-    #     self.assertEqual(context_post.id, self.post.id)
-    #     self.assertEqual(context_post.author, self.post.author)
-    #     self.assertEqual(context_post.text, self.post.text)
+    def test_unfollow(self):
+        response = self.authorized_client.get(reverse(
+            'posts:profile_unfollow',
+            kwargs={'username': self.follower.username}
+        ), follow=True)
+        self.assertEqual(response.context['following'], False)
 
-    # def test_post_edit_correct_context(self):
-    #     """Проверка полей формы при редактировании поста"""
-    #     response = self.authorized_client.get(
-    #         reverse('posts:post_edit', kwargs={'post_id': self.post.id})
-    #     )
-    #     self.assertEqual(
-    #         response.context.get('form').instance,
-    #         self.post
-    #     )
-    #     self.assertIsInstance(response.context.get('form'), PostForm)
+    def test_post_detail_filter(self):
+        """Проверка вывода правлиьного поста в подробной информации"""
+        response = self.authorized_client.get(
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_follower.id}
+            )
+        )
+        context_post = response.context.get('post')
+        self.assertEqual(context_post.id, self.post_follower.id)
+        self.assertEqual(context_post.author, self.post_follower.author)
+        self.assertEqual(context_post.text, self.post_follower.text)
+
+    def test_post_edit_correct_context(self):
+        """Проверка полей формы при редактировании поста"""
+        post = Post.objects.create(
+            text='twrtert',
+            author=self.user,
+        )
+        response = self.authorized_client.get(
+            reverse(
+                'posts:post_edit',
+                kwargs={'post_id': post.id}
+            )
+        )
+        self.assertEqual(
+            response.context.get('form').instance,
+            post
+        )
+        self.assertIsInstance(response.context.get('form'), PostForm)
 
     def test_correct_group_post_creation(self):
         """Проверка правильности группы при выборе таковой"""
         reverses_list = [
             reverse('posts:index'),
             reverse('posts:group_list', kwargs={'slug': self.group.slug}),
-            reverse('posts:profile', kwargs={'username': self.user.username})
+            reverse(
+                'posts:profile',
+                kwargs={'username': self.follower.username}
+            )
         ]
         for reverse_name in reverses_list:
             with self.subTest(reverse_name=reverse_name):
@@ -147,13 +141,13 @@ class ViewURLTest(TestCase):
                     self.post.group.title
                 )
                 self.assertEqual(
-                    first_object.author.username,
-                    self.post.author.username
+                    first_object.author,
+                    self.post_follower.author
                 )
-                # self.assertEqual(
-                #     first_object.id,
-                #     self.post.id
-                # )
+                self.assertEqual(
+                    first_object.id,
+                    self.post_follower.id
+                )
 
     def test_context(self):
         """Проверка правильного контекста на страницах автора и групп"""
@@ -174,6 +168,19 @@ class ViewURLTest(TestCase):
             with self.subTest(reverse_name=reverse_name):
                 response = self.authorized_client.get(reverse_name)
                 self.assertEqual(response.context[field], expected)
+
+    def test_cache(self):
+        response = self.authorized_client.get(reverse('posts:index')).content
+        self.post.delete()
+        self.assertEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
+        )
+        cache.clear()
+        self.assertNotEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
+        )
 
 
 class PaginatorViewsTest(TestCase):

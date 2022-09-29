@@ -2,9 +2,8 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.views.decorators.cache import cache_page
 
-from posts.models import Follow, Comment, Post, Group, User
+from posts.models import Follow, Post, Group, User
 from posts.forms import PostForm, GroupForm, CommentForm
 
 
@@ -16,7 +15,6 @@ def paginator_function(
     return paginator.get_page(page_number)
 
 
-@cache_page(20, key_prefix='/')
 def index(request):
     posts = Post.objects.select_related('author', 'group')
     page_number = request.GET.get('page')
@@ -28,12 +26,12 @@ def index(request):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    posts = author.posts_author.select_related('group')
+    posts = author.posts.select_related('group')
     page_number = request.GET.get('page')
-    status = False
+    status = True and False
 
-    if request.user.is_authenticated and Follow.objects.filter(
-            user__follower__user=request.user).exists():
+    if request.user.is_authenticated and author.following.filter(
+            user=request.user):
         status = True
 
     context = {
@@ -49,7 +47,7 @@ def post_detail(request, post_id):
         Post.objects.select_related('author', 'group'),
         id=post_id
     )
-    comments = Comment.objects.filter(post_id__comments__post=post_id)
+    comments = post.comments.filter(post_id=post_id)
     context = {
         'post': post,
         'form': CommentForm(),
@@ -60,7 +58,7 @@ def post_detail(request, post_id):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts_group.select_related('author')
+    posts = group.posts.select_related('author')
     page_number = request.GET.get('page')
     context = {
         'group': group,
