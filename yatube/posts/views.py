@@ -28,11 +28,10 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
     page_number = request.GET.get('page')
-    status = True and False
+    status = False
 
-    if request.user.is_authenticated and author.following.filter(
-            user=request.user):
-        status = True
+    status = (request.user.is_authenticated
+              and author.following.filter(user=request.user).exists())
 
     context = {
         'author': author,
@@ -47,7 +46,7 @@ def post_detail(request, post_id):
         Post.objects.select_related('author', 'group'),
         id=post_id
     )
-    comments = post.comments.filter(post_id=post_id)
+    comments = post.comments.all()
     context = {
         'post': post,
         'form': CommentForm(),
@@ -143,7 +142,9 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    posts = Post.objects.filter(author__following__user=request.user)
+    posts = Post.objects.filter(
+        author__following__user=request.user
+    ).select_related('author', 'group')
     page_number = request.GET.get('page')
     context = {
         'page_obj': paginator_function(posts, page_number)

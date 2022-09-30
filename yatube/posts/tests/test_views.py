@@ -61,13 +61,6 @@ class ViewURLTest(TestCase):
         )
 
     def test_folow_index_context(self):
-        """Проверка что посты автора не появляются у тех,
-            кто на него не подписан"""
-        response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertEqual(
-            len(response.context['page_obj']),
-            1
-        )
         """Проверка что посты автора появляются у тех,
             кто на него подписан"""
         response = self.authorized_client.get(reverse('posts:follow_index'))
@@ -77,19 +70,25 @@ class ViewURLTest(TestCase):
             response.context['page_obj']
         )
 
-    def test_follow_possibility(self):
-        response = self.authorized_client.get(reverse(
-            'posts:profile_follow',
-            kwargs={'username': self.follower.username}
-        ), follow=True)
-        self.assertEqual(response.context['following'], True)
-
     def test_unfollow(self):
-        response = self.authorized_client.get(reverse(
+        self.authorized_client.get(reverse(
             'posts:profile_unfollow',
             kwargs={'username': self.follower.username}
         ), follow=True)
-        self.assertEqual(response.context['following'], False)
+        self.assertFalse(Follow.objects.filter(
+            author=self.follower,
+            user=self.user
+        ))
+
+    def test_follow_possibility(self):
+        self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': self.follower.username}
+        ), follow=True)
+        self.assertTrue(Follow.objects.filter(
+            author=self.follower,
+            user=self.user
+        ))
 
     def test_post_detail_filter(self):
         """Проверка вывода правлиьного поста в подробной информации"""

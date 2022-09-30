@@ -92,7 +92,7 @@ class FormsTest(TestCase):
             )
         )
 
-    def test_form_Comment(self):
+    def test_form_сomment(self):
         Comment.objects.all().delete()
         form_data = {
             'text': 'Тестовый коммент'

@@ -18,7 +18,6 @@ class Group(models.Model):
         help_text='Адрес вашей группы:',
     )
     description = models.TextField(
-        null=False,
         blank=True,
         verbose_name='Описание:',
         help_text='Опишите вашу группу:'
@@ -33,16 +32,12 @@ class Follow(models.Model):
         User,
         related_name='follower',
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         verbose_name='Подпысчик'
     )
     author = models.ForeignKey(
         User,
         related_name='following',
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         verbose_name='Автор'
     )
 
@@ -104,8 +99,6 @@ class Comment(CreateModel):
     )
     author = models.ForeignKey(
         User,
-        blank=True,
-        null=True,
         on_delete=models.CASCADE,
         verbose_name='Автор комментария',
         related_name='comments'
