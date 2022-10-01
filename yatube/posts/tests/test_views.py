@@ -83,7 +83,7 @@ class ViewURLTest(TestCase):
     def test_follow_possibility(self):
         self.authorized_client.get(reverse(
             'posts:profile_follow',
-            kwargs={'username': self.follower.username}                    
+            kwargs={'username': self.follower.username}
         ), follow=True)
         self.assertTrue(Follow.objects.filter(
             author=self.follower,
