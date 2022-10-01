@@ -28,8 +28,6 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
     page_number = request.GET.get('page')
-    status = False
-
     status = (request.user.is_authenticated
               and author.following.filter(user=request.user).exists())
 
@@ -46,7 +44,7 @@ def post_detail(request, post_id):
         Post.objects.select_related('author', 'group'),
         id=post_id
     )
-    comments = post.comments.all()
+    comments = post.comments.select_related('author')
     context = {
         'post': post,
         'form': CommentForm(),

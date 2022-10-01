@@ -5,7 +5,7 @@
 {% endblock title %}
 {% block content %}  
   <h1>Последние обновления на сайте</h1>
-    {% cache 20 index_page page_obj %}
+    {% cache 20 index_page page_obj.paginator.page_number %}
       {% include 'posts/includes/switcher.html' %}
       {% for post in page_obj %}
         {% include 'posts/includes/post.html' %}
